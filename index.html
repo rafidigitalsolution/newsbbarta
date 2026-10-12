@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বিবার্তা - ফটোকার্ড জেনারেটর</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --primary-green: #16a34a;
+            --dark-black: #111111;
+            --pure-white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(22, 163, 74, 0.2);
+            --glass-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tiro Bangla', 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #fee2e2 100%);
+            color: var(--dark-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* 1. Splash Screen Animation */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        .splash-logo {
+            width: 180px;
+            border-radius: 20px;
+            animation: zoomPulse 1.8s infinite ease-in-out;
+            box-shadow: 0 10px 25px rgba(22, 163, 74, 0.3);
+        }
+
+        @keyframes zoomPulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        /* 2. Red-Green Header UI */
+        header {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 3px solid var(--primary-green);
+            padding: 12px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .clock-container {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--dark-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .smart-badge {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--primary-green);
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
+            color: var(--dark-black);
+        }
+
+        .smart-badge i {
+            color: var(--primary-red);
+        }
+
+        .clock-badge {
+            background: var(--primary-green);
+            color: var(--pure-white);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+        }
+
+        /* 3. News Ticker / Marquee */
+        .ticker-wrapper {
+            background: var(--dark-black);
+            color: var(--pure-white);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            height: 40px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .ticker-title {
+            background: var(--primary-red);
+            padding: 0 20px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            white-space: nowrap;
+            z-index: 2;
+            font-size: 0.95rem;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: marquee 18s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 900px;
+            width: 90%;
+            margin: 40px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-view {
+            width: 100%;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+
+        .page-view.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Red-Green Gradient CTA Button */
+        .btn-animated {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-green) 100%);
+            color: white;
+            padding: 18px 45px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(22, 163, 74, 0.3);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            animation: bounce 2s infinite;
+        }
+
+        .btn-animated:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(220, 38, 38, 0.4);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+            60% { transform: translateY(-4px); }
+        }
+
+        /* Glassmorphism Card Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+        }
+
+        /* Clean Home Hero */
+        .hero-card {
+            text-align: center;
+            padding: 60px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .hero-card h1 {
+            font-size: 2.3rem;
+            color: var(--dark-black);
+            font-weight: 700;
+        }
+
+        .hero-card h1 span {
+            color: var(--primary-red);
+        }
+
+        .hero-card h1 span.green {
+            color: var(--primary-green);
+        }
+
+        .hero-card p {
+            font-size: 1.15rem;
+            color: #444;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark-black);
+            font-size: 1.05rem;
+        }
+
+        /* Drop & Drag Zone */
+        .drop-zone {
+            border: 2px dashed var(--primary-green);
+            border-radius: 14px;
+            padding: 35px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary-red);
+            background: rgba(22, 163, 74, 0.05);
+        }
+
+        .drop-zone i {
+            font-size: 45px;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+        }
+
+        .input-text {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            outline: none;
+            font-size: 1.05rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: border 0.3s;
+        }
+
+        .input-text:focus {
+            border-color: var(--primary-green);
+        }
+
+        /* Control Panel on Preview Page */
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 14px;
+            width: 100%;
+        }
+
+        .ctrl-btn {
+            background: var(--dark-black);
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .ctrl-btn:hover {
+            background: var(--primary-green);
+        }
+
+        .view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 15px 0;
+        }
+
+        .btn-download {
+            background: var(--primary-green);
+            color: white;
+            padding: 14px 35px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 35px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(22, 163, 74, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-download:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+
+        /* Footer Section */
+        footer {
+            background: var(--dark-black);
+            color: var(--pure-white);
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            border-top: 3px solid var(--primary-green);
+            font-size: 0.95rem;
+        }
+
+        footer a {
+            color: #4ade80;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        footer a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .clock-container { font-size: 0.85rem; }
+            .btn-animated { width: 100%; justify-content: center; padding: 16px 20px; font-size: 1.15rem; }
+            .glass-card { padding: 25px; }
+            .hero-card h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Splash Screen with New Logo -->
+    <div id="splash-screen">
+        <img src="https://i.ibb.co/8Sy0Nq2/Pixellab-ST-20261012-203135.png" alt="Logo" class="splash-logo">
+    </div>
+
+    <!-- 2. Header with Smart & Premium Dates -->
+    <header>
+        <div class="clock-container">
+            <div class="smart-badge"><i class="fa-solid fa-calendar-day"></i> <span id="date-bn"></span></div>
+            <div class="smart-badge"><i class="fa-solid fa-calendar-days"></i> <span id="date-en"></span></div>
+            <div class="clock-badge"><i class="fa-solid fa-clock"></i> <span id="time-clock">00:00:00 AM</span></div>
+        </div>
+    </header>
+
+    <!-- 3. News Ticker / Marquee -->
+    <div class="ticker-wrapper">
+        <div class="ticker-title"><i class="fa-solid fa-bullhorn" style="margin-right: 8px;"></i>ডেভলপার</div>
+        <div class="marquee-content">
+        নিউজ ম্যানেজমেন্ট সফটওয়্যার || এই সফটওয়্যারটি ডিজাইন ও ডেভেলপ করেছে "রাফি ডিজিটাল সলিউশন" || যেকোনো প্রয়োজনে কল করুন - ০১৭৬৩৭৫২৬৫৩</div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- View 1: Home Screen -->
+        <div id="view-home" class="page-view active">
+            <div class="glass-card hero-card">
+                <h1><span>বিবার্তা</span> <span class="green">ফটোকার্ড জেনারেটর</span></h1>
+                <p>প্রফেশনাল ও প্রিমিয়াম ডিজাইনে সহজে নিউজ ফটোকার্ড তৈরি করুন।</p>
+                <button class="btn-animated" onclick="switchView('view-form')">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> ফটোকার্ড ডিজাইন করুন
+                </button>
+            </div>
+        </div>
+
+        <!-- View 2: Form Page -->
+        <div id="view-form" class="page-view">
+            <div class="glass-card">
+                <div class="view-header">
+                    <button class="ctrl-btn" onclick="switchView('view-home')"><i class="fa-solid fa-arrow-left"></i> হোম</button>
+                    <h2 style="color: var(--dark-black);">ফটোকার্ড ফরম</h2>
+                    <div></div>
+                </div>
+                
+                <!-- Drag & Drop Area -->
+                <div class="form-group">
+                    <label>ছবি নির্বাচন করুন (ড্রপ অ্যান্ড ড্রাগ)</label>
+                    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('img-input').click()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p id="drop-text">এখানে ছবি আপলোড করুন</p>
+                        <input type="file" id="img-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- Title Input -->
+                <div class="form-group">
+                    <label for="headline-input">সংবাদের শিরোনাম লিখুন</label>
+                    <textarea id="headline-input" class="input-text" rows="3" placeholder="এখানে শিরোনাম লিখুন (প্রথম ৩টি শব্দ লাল রঙে এবং বাকি সব কালো হবে)..."></textarea>
+                </div>
+
+                <!-- Generate Button -->
+                <button class="btn-animated" style="width: 100%; justify-content: center; animation: none;" onclick="goToPreview()">
+                    <i class="fa-solid fa-gears"></i> ফটোকার্ড জেনারেট করুন
+                </button>
+            </div>
+        </div>
+
+        <!-- View 3: Preview & Download Page -->
+        <div id="view-preview" class="page-view">
+            <div class="glass-card" style="text-align: center;">
+                <div class="view-header">
+                    <button class="ctrl-btn" onclick="switchView('view-form')"><i class="fa-solid fa-arrow-left"></i> এডিট করুন</button>
+                    <h2 style="color: var(--dark-black);">ফটোকার্ড প্রিভিউ ও এডজাস্টমেন্ট</h2>
+                    <div></div>
+                </div>
+
+                <!-- Image Position & Scale Controls on Preview Page -->
+                <div class="control-panel">
+                    <button class="ctrl-btn" onclick="adjustImage('zoomIn')"><i class="fa-solid fa-magnifying-glass-plus"></i> জুম ইন</button>
+                    <button class="ctrl-btn" onclick="adjustImage('zoomOut')"><i class="fa-solid fa-magnifying-glass-minus"></i> জুম আউট</button>
+                    <button class="ctrl-btn" onclick="adjustImage('left')"><i class="fa-solid fa-arrow-left"></i> বামে</button>
+                    <button class="ctrl-btn" onclick="adjustImage('right')"><i class="fa-solid fa-arrow-right"></i> ডানে</button>
+                    <button class="ctrl-btn" onclick="adjustImage('up')"><i class="fa-solid fa-arrow-up"></i> উপরে</button>
+                    <button class="ctrl-btn" onclick="adjustImage('down')"><i class="fa-solid fa-arrow-down"></i> নিচে</button>
+                </div>
+
+                <canvas id="photocard-canvas"></canvas>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn-download" onclick="downloadPhotocard()">
+                        <i class="fa-solid fa-download"></i> ফটোকার্ড ডাউনলোড করুন
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>© কপিরাইট বিবার্তা | সর্বস্বত্ব সংরক্ষিত</p>
+        <p style="margin-top: 6px; font-size: 0.85rem;">
+            DESIGN & DEVELOPED BY 
+            <a href="https://wa.me/8801763752653?text=%E0%A6%AB%E0%A6%9F%E0%A7%8B%E0%A6%95%E0%A6%BE%E0%A6%B0%E0%A7%8D%E0%A6%A1%20%E0%A6%BB%E0%A6%BE%E0%A6%B0%E0%A7%8D%E0%A6%BA%E0%A6%BE%E0%A6%B0%20%E0%A6%A8%E0%A6%BF%E0%A6%A4%E0%A6%AF%E0%A6%BC%E0%A7%87%20%E0%A6%9A%E0%A6%BE%E0%A6%88" target="_blank">
+                RAFI DIGITAL SOLUTION
+            </a>
+        </p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        function toBengaliNum(num) {
+            const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            return num.toString().split('').map(d => bnDigits[d] !== undefined ? bnDigits[d] : d).join('');
+        }
+
+        function getBanglaDateString(date) {
+            const gYear = date.getFullYear();
+            const bMonths = ["বৈশাখ", "জ্যৈষ্ঠ", "আষাঢ়", "শ্রাবণ", "ভাদ্র", "আশ্বিন", "কার্তিক", "অগ্রহায়ণ", "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"];
+            
+            let bYear = gYear - 593;
+            let bishakhStart = new Date(gYear, 3, 14);
+            
+            if (date < bishakhStart) {
+                bYear = gYear - 594;
+                bishakhStart = new Date(gYear - 1, 3, 14);
+            }
+
+            const diffDays = Math.floor((date - bishakhStart) / (1000 * 60 * 60 * 24));
+            let isLeap = (gYear % 4 === 0 && gYear % 100 !== 0) || (gYear % 400 === 0);
+            let bMonthDays = [31, 31, 31, 31, 31, 30, 30, 30, 30, 30, isLeap ? 30 : 29, 30];
+
+            let currentDaySum = 0;
+            let bMonthIdx = 0;
+            let bDay = 1;
+
+            for (let i = 0; i < bMonthDays.length; i++) {
+                if (diffDays < currentDaySum + bMonthDays[i]) {
+                    bMonthIdx = i;
+                    bDay = diffDays - currentDaySum + 1;
+                    break;
+                }
+                currentDaySum += bMonthDays[i];
+            }
+            return `${toBengaliNum(bDay)} ${bMonths[bMonthIdx]} ${toBengaliNum(bYear)}`;
+        }
+
+        function getEnglishDateString(date) {
+            const monthsEn = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+            return `${toBengaliNum(date.getDate())} ${monthsEn[date.getMonth()]}, ${toBengaliNum(date.getFullYear())}ইং`;
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 800);
+            }, 2000);
+
+            const now = new Date();
+            document.getElementById('date-bn').innerText = getBanglaDateString(now);
+            document.getElementById('date-en').innerText = getEnglishDateString(now);
+        });
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('time-clock').innerText = now.toLocaleTimeString('bn-BD');
+        }, 1000);
+
+        function switchView(viewId) {
+            document.querySelectorAll('.page-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        let userImage = new Image();
+        let frameImage = new Image();
+        let imgLoaded = false;
+        let frameLoaded = false;
+        let imgState = { x: 0, y: 0, scale: 1.0 };
+
+        frameImage.crossOrigin = "anonymous";
+        frameImage.src = "https://i.ibb.co.com/39hLMXBZ/Pixellab-ST-20261012-202900.png";
+        frameImage.onload = () => { frameLoaded = true; };
+
+        const dropZone = document.getElementById('drop-zone');
+        const imgInput = document.getElementById('img-input');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => e.preventDefault(), false);
+        });
+        ['dragenter', 'dragover'].forEach(eventName => dropZone.classList.add('dragover'));
+        ['dragleave', 'drop'].forEach(eventName => dropZone.classList.remove('dragover'));
+
+        dropZone.addEventListener('drop', (e) => {
+            if(e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files[0]);
+        });
+        imgInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) handleFiles(e.target.files[0]);
+        });
+
+        function handleFiles(file) {
+            if(!file.type.startsWith('image/')) {
+                alert('অনুগ্রহ করে সঠিক ইমেজ ফাইল নির্বাচন করুন।');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                userImage = new Image();
+                userImage.onload = () => {
+                    imgLoaded = true;
+                    imgState = { x: 0, y: 0, scale: 1.0 };
+                    document.getElementById('drop-text').innerText = `ছবি সংযুক্ত হয়েছে: ${file.name}`;
+                };
+                userImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function goToPreview() {
+            if (!imgLoaded) {
+                alert('অনুগ্রহ করে প্রথমে একটি ছবি আপলোড করুন!');
+                return;
+            }
+            if (!frameLoaded) {
+                alert('ফ্রেম ইমেজ লোড হচ্ছে, অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।');
+                return;
+            }
+            switchView('view-preview');
+            generatePhotocard();
+        }
+
+        function adjustImage(action) {
+            if(!imgLoaded) return;
+            const step = 20;
+            if (action === 'zoomIn') imgState.scale += 0.05;
+            if (action === 'zoomOut') imgState.scale = Math.max(0.1, imgState.scale - 0.05);
+            if (action === 'left') imgState.x -= step;
+            if (action === 'right') imgState.x += step;
+            if (action === 'up') imgState.y -= step;
+            if (action === 'down') imgState.y += step;
+
+            generatePhotocard();
+        }
+
+        function generatePhotocard() {
+            const canvas = document.getElementById('photocard-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = frameImage.naturalWidth || 1080;
+            canvas.height = frameImage.naturalHeight || 1350;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            /* 1. Draw User Image */
+            if (imgLoaded && userImage.complete) {
+                const targetX = 22; 
+                const targetY = 85; 
+                const targetW = canvas.width - 44;
+                const targetH = canvas.height * 0.54;
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(targetX, targetY, targetW, targetH);
+                ctx.clip();
+
+                const imgRatio = userImage.width / userImage.height;
+                const targetRatio = targetW / targetH;
+                let drawW, drawH;
+
+                if (imgRatio > targetRatio) {
+                    drawH = targetH * imgState.scale;
+                    drawW = drawH * imgRatio;
+                } else {
+                    drawW = targetW * imgState.scale;
+                    drawH = drawW / imgRatio;
+                }
+
+                const drawX = targetX + (targetW - drawW) / 2 + imgState.x;
+                const drawY = targetY + (targetH - drawH) / 2 + imgState.y;
+
+                ctx.drawImage(userImage, drawX, drawY, drawW, drawH);
+                ctx.restore();
+            }
+
+            /* 2. Draw Frame Overlay */
+            ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+
+            /* 3. Render Calendar Date */
+            renderCalendarDate(ctx, canvas.width, canvas.height);
+
+            /* 4. Render Headline Properly Inside White News Box */
+            const text = document.getElementById('headline-input').value.trim();
+            if (text.length > 0) {
+                renderAutoFittingHeadline(ctx, text, canvas.width, canvas.height);
+            }
+        }
+
+        function renderCalendarDate(ctx, canvasWidth, canvasH) {
+            const now = new Date();
+            const dateStr = getEnglishDateString(now);
+            
+            ctx.save();
+            ctx.font = `bold ${Math.floor(canvasWidth * 0.020)}px 'Tiro Bangla', sans-serif`;
+            ctx.fillStyle = '#111111'; 
+            ctx.textAlign = 'left';
+            ctx.fillText(dateStr, canvasWidth * 0.105, canvasH * 0.870);
+            ctx.restore();
+        }
+
+        function renderAutoFittingHeadline(ctx, text, canvasWidth, canvasH) {
+            const words = text.split(/\s+/);
+            const startX = 85;
+            const startY = canvasH * 0.745; 
+            const maxLineWidth = canvasWidth - 170;
+            const maxBoxHeight = canvasH * 0.11;
+
+            let fontSize = Math.floor(canvasWidth * 0.045);
+            let lines = [];
+            let tokens = [];
+
+            words.forEach((w, idx) => {
+                tokens.push({ text: w + " ", color: (idx < 3) ? '#dc2626' : '#111111' });
+            });
+
+            while (fontSize > 18) {
+                ctx.font = `bold ${fontSize}px 'Tiro Bangla', sans-serif`;
+                let lineHeight = fontSize * 1.3;
+                let currentLines = [];
+                let currentLine = [];
+                let currentLineWidth = 0;
+
+                tokens.forEach(token => {
+                    let tokenWidth = ctx.measureText(token.text).width;
+                    if (currentLineWidth + tokenWidth > maxLineWidth) {
+                        currentLines.push(currentLine);
+                        currentLine = [token];
+                        currentLineWidth = tokenWidth;
+                    } else {
+                        currentLine.push(token);
+                        currentLineWidth += tokenWidth;
+                    }
+                });
+                if (currentLine.length > 0) currentLines.push(currentLine);
+
+                let totalHeight = currentLines.length * lineHeight;
+                if (totalHeight <= maxBoxHeight) {
+                    lines = currentLines;
+                    break;
+                }
+                fontSize -= 2;
+            }
+
+            if (lines.length === 0) {
+                ctx.font = `bold ${fontSize}px 'Tiro Bangla', sans-serif`;
+                lines = [tokens];
+            }
+
+            let lineHeight = fontSize * 1.3;
+            let currentY = startY;
+
+            lines.forEach(line => {
+                let drawX = startX;
+                line.forEach(t => {
+                    ctx.fillStyle = t.color;
+                    ctx.fillText(t.text, drawX, currentY);
+                    drawX += ctx.measureText(t.text).width;
+                });
+                currentY += lineHeight;
+            });
+        }
+
+        function downloadPhotocard() {
+            const canvas = document.getElementById('photocard-canvas');
+            const link = document.createElement('a');
+            link.download = 'bibarta-photocard.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
