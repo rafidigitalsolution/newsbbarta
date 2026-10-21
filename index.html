@@ -748,26 +748,19 @@
         let epaperTheme = 'color'; // 'color' or 'bw'
         let userImage = new Image();
         let logoImage = new Image();
-        let morningLogoImage = new Image();
         let newsFrameImage = new Image();
         let epaperHeaderImage = new Image();
 
         let imgLoaded = false;
         let newsFrameLoaded = false;
         let logoLoaded = false;
-        let morningLogoLoaded = false;
         let epaperHeaderLoaded = false;
         let imgState = { x: 0, y: 0, scale: 1.0 };
 
-        // লোগো ইমেজ
+        // নতুন শুভ সকাল লোগো (গোল ও পারফেক্ট রাখার জন্য স্কয়ার সাইজে ড্র করা হবে)
         logoImage.crossOrigin = "anonymous";
         logoImage.onload = () => { logoLoaded = true; generatePhotocard(); };
-        logoImage.src = "https://i.ibb.co.com/Sw0LX97n/Pixellab-ST-20261012-203135.png";
-
-        // শুভ সকাল কার্ডের ডানপাশের লোগো
-        morningLogoImage.crossOrigin = "anonymous";
-        morningLogoImage.onload = () => { morningLogoLoaded = true; generatePhotocard(); };
-        morningLogoImage.src = "https://i.ibb.co.com/DFYvqxy/Pixellab-ST-20261021-114407.png";
+        logoImage.src = "https://i.ibb.co.com/DFYvqxy/Pixellab-ST-20261021-114407.png";
 
         // নিউজ ফ্রেম ইমেজ
         newsFrameImage.crossOrigin = "anonymous";
@@ -845,7 +838,6 @@
         }
 
         function goToEpaperPreview() {
-            if (!imgLoaded) { alert('অনুগ্রহ করে সংবাদের ছবি আপলোড করুন!'); return; }
             currentMode = 'epaper';
             document.getElementById('epaper-theme-section').style.display = 'block';
             document.getElementById('font-slider-section').style.display = 'none';
@@ -971,25 +963,13 @@
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // বামপাশের লোগো
+            // নতুন লোগো রেন্ডারিং (সমানুপাতিক বা গোল শেপ বজায় রেখে)
             if (logoLoaded && logoImage.complete) {
                 ctx.save();
-                const logoW = 380;
-                const logoH = 180;
+                const logoSize = 220; // স্কয়ার সাইজ নিশ্চিত করা হয়েছে যাতে চ্যাপ্টা না হয়
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
                 ctx.shadowBlur = 15;
-                ctx.drawImage(logoImage, 100, 100, logoW, logoH);
-                ctx.restore();
-            }
-
-            // ডানপাশের নতুন লোগো
-            if (morningLogoLoaded && morningLogoImage.complete) {
-                ctx.save();
-                const logoW = 380;
-                const logoH = 180;
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                ctx.shadowBlur = 15;
-                ctx.drawImage(morningLogoImage, canvas.width - logoW - 100, 100, logoW, logoH);
+                ctx.drawImage(logoImage, 100, 100, logoSize, logoSize);
                 ctx.restore();
             }
 
@@ -1173,7 +1153,6 @@
             const lineHeight = 58;
             const paraGap = 20;
 
-            // ৩. টেক্সট পরিমাপ
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             ctx.fillStyle = '#334155';
 
@@ -1187,8 +1166,6 @@
 
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // --- আসল রেন্ডারিং ---
 
             // ১. হেডার
             if (epaperHeaderLoaded && epaperHeaderImage.complete) {
@@ -1259,7 +1236,7 @@
                 ctx.strokeRect(imgX, imgY, imgWidth, imgHeight);
             }
 
-            // ৫. সংবাদের প্যারাগ্রাফ ও Justified Text রেন্ডারিং
+            // ৫. প্যারাগ্রাফ ও Justified Text রেন্ডারিং
             let renderY = currentY + 40;
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             ctx.fillStyle = '#1e293b';
@@ -1276,7 +1253,7 @@
                 renderY += paraGap;
             });
 
-            // ৬. প্রফেশনাল ফুটার (Dynamic Footer)
+            // ৬. প্রফেশনাল ফুটার
             const finalFooterY = Math.max(renderY, hasImage ? (imgY + imgHeight + 40) : renderY) + 50;
 
             ctx.strokeStyle = epaperTheme === 'bw' ? '#0f172a' : '#0b3c5d';
@@ -1297,7 +1274,6 @@
             ctx.fillText("©২০২৬ সর্বস্বত্ব সংরক্ষিত- বিবার্তা", canvas.width / 2, finalFooterY + 125);
             ctx.restore();
 
-            // ক্যানভাস সাইজ ফাইনাল ক্রপ
             const finalCanvasHeight = finalFooterY + 180;
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width;
@@ -1308,7 +1284,6 @@
             canvas.height = finalCanvasHeight;
             ctx.drawImage(tempCanvas, 0, 0);
 
-            // বি&ডব্লিউ ফিল্টার
             if (epaperTheme === 'bw') {
                 let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 let data = imgData.data;
