@@ -587,6 +587,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="epaper-reporter">প্রতিনিধির নাম (খালি রাখলে "নিউজ ডেস্ক" আসবে)</label>
+                    <input type="text" id="epaper-reporter" class="input-text" placeholder="যেমন: রফিকুল ইসলাম, বড়াইগ্রাম (নাটোর)">
+                </div>
+
+                <div class="form-group">
                     <label for="epaper-body">সংবাদের বিস্তারিত বিবরণ</label>
                     <textarea id="epaper-body" class="input-text" rows="6" placeholder="সংবাদের বিস্তারিত প্রতিবেদন এখানে লিখুন..."></textarea>
                 </div>
@@ -757,17 +762,14 @@
         let epaperHeaderLoaded = false;
         let imgState = { x: 0, y: 0, scale: 1.0 };
 
-        // নতুন শুভ সকাল লোগো (গোল ও পারফেক্ট রাখার জন্য স্কয়ার সাইজে ড্র করা হবে)
         logoImage.crossOrigin = "anonymous";
         logoImage.onload = () => { logoLoaded = true; generatePhotocard(); };
         logoImage.src = "https://i.ibb.co.com/DFYvqxy/Pixellab-ST-20261021-114407.png";
 
-        // নিউজ ফ্রেম ইমেজ
         newsFrameImage.crossOrigin = "anonymous";
         newsFrameImage.onload = () => { newsFrameLoaded = true; generatePhotocard(); };
         newsFrameImage.src = "https://i.ibb.co.com/GvdcFMTF/Pixellab-ST-20261017-180706.png";
 
-        // ই-পেপার হেডার ইমেজ
         epaperHeaderImage.crossOrigin = "anonymous";
         epaperHeaderImage.onload = () => { epaperHeaderLoaded = true; generatePhotocard(); };
         epaperHeaderImage.src = "https://i.ibb.co.com/Cs8ctP8j/Pixellab-ST-20261021-105636.png";
@@ -915,6 +917,16 @@
                 ctx.drawImage(newsFrameImage, 0, 0, canvas.width, canvas.height);
             }
 
+            if(logoLoaded && logoImage.complete) {
+                ctx.save();
+                const logoW = 220;
+                const logoH = 220;
+                const logoX = canvas.width - logoW - 90;
+                const logoY = 1910;
+                ctx.drawImage(logoImage, logoX, logoY, logoW, logoH);
+                ctx.restore();
+            }
+
             const now = new Date();
             const dateStr = getFullBanglaDateString(now);
             ctx.save();
@@ -963,10 +975,9 @@
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // নতুন লোগো রেন্ডারিং (সমানুপাতিক বা গোল শেপ বজায় রেখে)
             if (logoLoaded && logoImage.complete) {
                 ctx.save();
-                const logoSize = 220; // স্কয়ার সাইজ নিশ্চিত করা হয়েছে যাতে চ্যাপ্টা না হয়
+                const logoSize = 220;
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
                 ctx.shadowBlur = 15;
                 ctx.drawImage(logoImage, 100, 100, logoSize, logoSize);
@@ -1121,8 +1132,13 @@
 
             const headlineText = document.getElementById('epaper-headline').value.trim();
             const rawBodyText = document.getElementById('epaper-body').value.trim();
+            
+            // প্রতিনিধির নাম বক্স থেকে ইনপুট নেওয়া, খালি থাকলে "নিউজ ডেস্ক" বসবে
+            let reporterInput = document.getElementById('epaper-reporter').value.trim();
+            const reporterName = reporterInput !== "" ? reporterInput : "নিউজ ডেস্ক";
+            const prefix = `${reporterName}: `;
 
-            // ১. শিরোনাম পরিমাপ
+            // শিরোনাম পরিমাপ
             ctx.font = `bold 72px 'Tiro Bangla', sans-serif`;
             let headlineLines = [];
             if (headlineText.length > 0) {
@@ -1141,7 +1157,7 @@
             }
             const headlineH = headlineLines.length * 92 + (headlineLines.length > 0 ? 30 : 0);
 
-            // ২. ছবি ও প্যারাগ্রাফ সেটিংস
+            // ছবি ও প্যারাগ্রাফ সেটিংস
             const hasImage = imgLoaded && userImage.complete;
             const imgWidth = hasImage ? 920 : 0;
             const imgHeight = hasImage ? 620 : 0;
@@ -1154,12 +1170,49 @@
             const paraGap = 20;
 
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
-            ctx.fillStyle = '#334155';
-
             const paragraphs = rawBodyText.split('\n').filter(p => p.trim() !== "");
 
-            let estimatedBodyH = Math.max(imgHeight, paragraphs.length * 120);
-            const calculatedHeight = headerH + dateBarH + 90 + headlineH + estimatedBodyH + 300;
+            // ডায়নামিক উচ্চতা হিসাব
+            let startY = headerH + dateBarH + 90 + headlineH;
+            let renderY = startY + 40;
+            
+            if (hasImage) {
+                renderY += 20;
+            }
+
+            paragraphs.forEach((para, index) => {
+                const isFirst = (index === 0);
+                const activePrefix = isFirst ? prefix : "";
+                
+                let testY = renderY;
+                let words = para.trim().split(/\s+/);
+                let currentLineWidth = 0;
+                let activeWidth = contentWidth;
+
+                if (hasImage && testY < (startY + 40 + imgHeight - 30)) {
+                    activeWidth = rightColumnWidth;
+                }
+
+                if (isFirst && activePrefix !== "") {
+                    ctx.font = `bold ${fontSize + 2}px 'Tiro Bangla', sans-serif`;
+                    currentLineWidth += ctx.measureText(activePrefix).width;
+                    ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
+                }
+
+                words.forEach(word => {
+                    let wWidth = ctx.measureText(word + " ").width;
+                    if (currentLineWidth + wWidth > activeWidth) {
+                        testY += lineHeight;
+                        currentLineWidth = wWidth;
+                    } else {
+                        currentLineWidth += wWidth;
+                    }
+                });
+                renderY = testY + lineHeight + paraGap;
+            });
+
+            let finalFooterY = Math.max(renderY, hasImage ? (startY + 40 + imgHeight + 40) : renderY) + 60;
+            const calculatedHeight = finalFooterY + 220;
 
             canvas.width = canvasWidth;
             canvas.height = Math.max(2000, Math.ceil(calculatedHeight));
@@ -1236,25 +1289,25 @@
                 ctx.strokeRect(imgX, imgY, imgWidth, imgHeight);
             }
 
-            // ৫. প্যারাগ্রাফ ও Justified Text রেন্ডারিং
-            let renderY = currentY + 40;
+            // ৫. প্যারাগ্রাফ ও প্রতিনিধির নাম সহ রেন্ডারিং
+            renderY = currentY + 40;
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             ctx.fillStyle = '#1e293b';
 
             paragraphs.forEach((para, index) => {
                 const isFirst = (index === 0);
-                const prefix = isFirst ? "নিউজ ডেস্ক: " : "";
+                const activePrefix = isFirst ? prefix : "";
                 
                 if (hasImage && renderY < (imgY + imgHeight - 30)) {
-                    renderY = renderJustifiedText(ctx, para, rightColumnX, renderY, rightColumnWidth, lineHeight, isFirst, prefix);
+                    renderY = renderJustifiedText(ctx, para, rightColumnX, renderY, rightColumnWidth, lineHeight, isFirst, activePrefix);
                 } else {
-                    renderY = renderJustifiedText(ctx, para, leftRightMargin, renderY, contentWidth, lineHeight, isFirst, prefix);
+                    renderY = renderJustifiedText(ctx, para, leftRightMargin, renderY, contentWidth, lineHeight, isFirst, activePrefix);
                 }
                 renderY += paraGap;
             });
 
-            // ৬. প্রফেশনাল ফুটার
-            const finalFooterY = Math.max(renderY, hasImage ? (imgY + imgHeight + 40) : renderY) + 50;
+            // ৬. ফুটার অংশ
+            finalFooterY = Math.max(renderY, hasImage ? (imgY + imgHeight + 40) : renderY) + 50;
 
             ctx.strokeStyle = epaperTheme === 'bw' ? '#0f172a' : '#0b3c5d';
             ctx.lineWidth = 5;
@@ -1273,16 +1326,6 @@
             ctx.fillStyle = '#64748b';
             ctx.fillText("©২০২৬ সর্বস্বত্ব সংরক্ষিত- বিবার্তা", canvas.width / 2, finalFooterY + 125);
             ctx.restore();
-
-            const finalCanvasHeight = finalFooterY + 180;
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = finalCanvasHeight;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(canvas, 0, 0);
-
-            canvas.height = finalCanvasHeight;
-            ctx.drawImage(tempCanvas, 0, 0);
 
             if (epaperTheme === 'bw') {
                 let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
