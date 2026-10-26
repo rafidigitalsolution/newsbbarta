@@ -587,8 +587,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="epaper-reporter">প্রতিনিধির নাম (খালি রাখলে "নিউজ ডেস্ক" আসবে)</label>
-                    <input type="text" id="epaper-reporter" class="input-text" placeholder="যেমন: রফিকুল ইসলাম, বড়াইগ্রাম (নাটোর)">
+                    <label for="epaper-reporter">প্রতিনিধির নাম (খালি রাখলে অটো "নিউজ ডেস্ক" হবে)</label>
+                    <input type="text" id="epaper-reporter" class="input-text" placeholder="যেমন: মো. রাশেদুল ইসলাম বা খালি রাখুন">
                 </div>
 
                 <div class="form-group">
@@ -917,13 +917,15 @@
                 ctx.drawImage(newsFrameImage, 0, 0, canvas.width, canvas.height);
             }
 
+            // নিউজ ফটোকার্ডের ফ্রেমের ওপরের ডান সাইডে লোগো সেট করার সঠিক কোঅর্ডিনেট
             if(logoLoaded && logoImage.complete) {
                 ctx.save();
-                const logoW = 220;
-                const logoH = 220;
-                const logoX = canvas.width - logoW - 90;
-                const logoY = 1910;
-                ctx.drawImage(logoImage, logoX, logoY, logoW, logoH);
+                const logoSize = 180;
+                const logoX = canvas.width - logoSize - 120; // ওপরের ডান কোণায় সুন্দর মার্জিন রেখে
+                const logoY = 120; 
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 12;
+                ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
                 ctx.restore();
             }
 
@@ -1131,12 +1133,11 @@
             const dateBarH = 75;
 
             const headlineText = document.getElementById('epaper-headline').value.trim();
-            const rawBodyText = document.getElementById('epaper-body').value.trim();
-            
-            // প্রতিনিধির নাম বক্স থেকে ইনপুট নেওয়া, খালি থাকলে "নিউজ ডেস্ক" বসবে
             let reporterInput = document.getElementById('epaper-reporter').value.trim();
+            // যদি প্রতিনিধির নাম ফাঁকা থাকে, তবে অটো "নিউজ ডেস্ক" বসবে
             const reporterName = reporterInput !== "" ? reporterInput : "নিউজ ডেস্ক";
-            const prefix = `${reporterName}: `;
+
+            const rawBodyText = document.getElementById('epaper-body').value.trim();
 
             // শিরোনাম পরিমাপ
             ctx.font = `bold 72px 'Tiro Bangla', sans-serif`;
@@ -1172,7 +1173,7 @@
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             const paragraphs = rawBodyText.split('\n').filter(p => p.trim() !== "");
 
-            // ডায়নামিক উচ্চতা হিসাব
+            // ডায়নামিক উচ্চতা হিসাব করার লজিক (ফুটার সুরক্ষার জন্য)
             let startY = headerH + dateBarH + 90 + headlineH;
             let renderY = startY + 40;
             
@@ -1182,7 +1183,7 @@
 
             paragraphs.forEach((para, index) => {
                 const isFirst = (index === 0);
-                const activePrefix = isFirst ? prefix : "";
+                const prefix = isFirst ? `${reporterName}: ` : "";
                 
                 let testY = renderY;
                 let words = para.trim().split(/\s+/);
@@ -1191,12 +1192,6 @@
 
                 if (hasImage && testY < (startY + 40 + imgHeight - 30)) {
                     activeWidth = rightColumnWidth;
-                }
-
-                if (isFirst && activePrefix !== "") {
-                    ctx.font = `bold ${fontSize + 2}px 'Tiro Bangla', sans-serif`;
-                    currentLineWidth += ctx.measureText(activePrefix).width;
-                    ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
                 }
 
                 words.forEach(word => {
@@ -1289,19 +1284,19 @@
                 ctx.strokeRect(imgX, imgY, imgWidth, imgHeight);
             }
 
-            // ৫. প্যারাগ্রাফ ও প্রতিনিধির নাম সহ রেন্ডারিং
+            // ৫. প্যারাগ্রাফ রেন্ডারিং (ডাইনামিক প্রতিনিধির নামসহ)
             renderY = currentY + 40;
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             ctx.fillStyle = '#1e293b';
 
             paragraphs.forEach((para, index) => {
                 const isFirst = (index === 0);
-                const activePrefix = isFirst ? prefix : "";
+                const prefix = isFirst ? `${reporterName}: ` : "";
                 
                 if (hasImage && renderY < (imgY + imgHeight - 30)) {
-                    renderY = renderJustifiedText(ctx, para, rightColumnX, renderY, rightColumnWidth, lineHeight, isFirst, activePrefix);
+                    renderY = renderJustifiedText(ctx, para, rightColumnX, renderY, rightColumnWidth, lineHeight, isFirst, prefix);
                 } else {
-                    renderY = renderJustifiedText(ctx, para, leftRightMargin, renderY, contentWidth, lineHeight, isFirst, activePrefix);
+                    renderY = renderJustifiedText(ctx, para, leftRightMargin, renderY, contentWidth, lineHeight, isFirst, prefix);
                 }
                 renderY += paraGap;
             });
