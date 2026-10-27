@@ -1416,12 +1416,12 @@
             let caption = "";
             if (currentMode === 'news') {
                 const text = document.getElementById('headline-input').value.trim();
-                caption = `${text}\n\nতারিখ: ${dateStr}\nবিস্তারিত পড়তে চোখ রাখুন বিবার্তা-তে।\n\n#Bivarta #BivartaNews #NewsUpdate`;
+                caption = `${text}\n\nতারিখ: ${dateStr}\nবিস্তারিত পড়তে চোখ রাখুন বিবার্তা-তে।\n\n#bbarta #bbartanews #NewsUpdate`;
             } else if (currentMode === 'morning') {
-                caption = `শুভ সকাল! আপনার দিনটি শুভ ও আনন্দময় হোক।\n\nতারিখ: ${dateStr}\n\n#ShuvoShokal #GoodMorning #Bivarta`;
+                caption = `শুভ সকাল! আপনার দিনটি শুভ ও আনন্দময় হোক।\n\nতারিখ: ${dateStr}\n\n#ShuvoShokal #GoodMorning #bbarta`;
             } else {
                 const headline = document.getElementById('epaper-headline').value.trim();
-                caption = `${headline}\n\nই-পেপার পাতা পড়তে চোখ রাখুন বিবার্তা-তে।\n\nমন্ডল মিডিয়া কর্তৃক প্রকাশিত\n\n#Epaper #BivartaNews #Bivarta`;
+                caption = `${headline}\n\nই-পেপার পাতা পড়তে চোখ রাখুন বিবার্তা-তে।\n\nমন্ডল মিডিয়া কর্তৃক প্রকাশিত\n\n#Epaper #bbartanews #bbarta`;
             }
             document.getElementById('generated-caption-text').innerText = caption;
         }
