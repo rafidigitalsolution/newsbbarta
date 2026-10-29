@@ -768,11 +768,11 @@
 
         newsFrameImage.crossOrigin = "anonymous";
         newsFrameImage.onload = () => { newsFrameLoaded = true; generatePhotocard(); };
-        newsFrameImage.src = "https://i.ibb.co.com/GvdcFMTF/Pixellab-ST-20261017-180706.png";
+        newsFrameImage.src = "https://i.ibb.co.com/pv7QC335/Pixellab-ST-20261030-012150.png";
 
         epaperHeaderImage.crossOrigin = "anonymous";
         epaperHeaderImage.onload = () => { epaperHeaderLoaded = true; generatePhotocard(); };
-        epaperHeaderImage.src = "https://i.ibb.co.com/Cs8ctP8j/Pixellab-ST-20261021-105636.png";
+        epaperHeaderImage.src = "https://i.ibb.co.com/zWBbKJGD/Pixellab-ST-20261030-012716.png";
 
         const setupDropZone = (zoneId, inputId, textId) => {
             const zone = document.getElementById(zoneId);
@@ -917,11 +917,11 @@
                 ctx.drawImage(newsFrameImage, 0, 0, canvas.width, canvas.height);
             }
 
-            // নিউজ ফটোকার্ডের ফ্রেমের ওপরের ডান সাইডে লোগো সেট করার সঠিক কোঅর্ডিনেট
+            // লোগো সেট করার সঠিক কোঅর্ডিনেট
             if(logoLoaded && logoImage.complete) {
                 ctx.save();
                 const logoSize = 180;
-                const logoX = canvas.width - logoSize - 120; // ওপরের ডান কোণায় সুন্দর মার্জিন রেখে
+                const logoX = canvas.width - logoSize - 120;
                 const logoY = 120; 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
                 ctx.shadowBlur = 12;
@@ -1134,12 +1134,10 @@
 
             const headlineText = document.getElementById('epaper-headline').value.trim();
             let reporterInput = document.getElementById('epaper-reporter').value.trim();
-            // যদি প্রতিনিধির নাম ফাঁকা থাকে, তবে অটো "নিউজ ডেস্ক" বসবে
             const reporterName = reporterInput !== "" ? reporterInput : "নিউজ ডেস্ক";
 
             const rawBodyText = document.getElementById('epaper-body').value.trim();
 
-            // শিরোনাম পরিমাপ
             ctx.font = `bold 72px 'Tiro Bangla', sans-serif`;
             let headlineLines = [];
             if (headlineText.length > 0) {
@@ -1158,7 +1156,6 @@
             }
             const headlineH = headlineLines.length * 92 + (headlineLines.length > 0 ? 30 : 0);
 
-            // ছবি ও প্যারাগ্রাফ সেটিংস
             const hasImage = imgLoaded && userImage.complete;
             const imgWidth = hasImage ? 920 : 0;
             const imgHeight = hasImage ? 620 : 0;
@@ -1173,7 +1170,6 @@
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             const paragraphs = rawBodyText.split('\n').filter(p => p.trim() !== "");
 
-            // ডায়নামিক উচ্চতা হিসাব করার লজিক (ফুটার সুরক্ষার জন্য)
             let startY = headerH + dateBarH + 90 + headlineH;
             let renderY = startY + 40;
             
@@ -1284,7 +1280,7 @@
                 ctx.strokeRect(imgX, imgY, imgWidth, imgHeight);
             }
 
-            // ৫. প্যারাগ্রাফ রেন্ডারিং (ডাইনামিক প্রতিনিধির নামসহ)
+            // ৫. প্যারাগ্রাফ রেন্ডারিং
             renderY = currentY + 40;
             ctx.font = `400 ${fontSize}px 'Tiro Bangla', sans-serif`;
             ctx.fillStyle = '#1e293b';
